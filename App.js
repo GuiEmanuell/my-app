@@ -1,109 +1,111 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
+  FlatList,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar as RNStatusBar,
+  TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 
-export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [senhaVisivel, setSenhaVisivel] = useState(false);
+const HISTORICO_MOCK = [
+  {
+    date: '26.08.22',
+    exercises: [
+      { id: '1', group: 'Costas', name: 'Puxada frontal', time: '08:56' },
+      { id: '2', group: 'Costas', name: 'Remada unilateral', time: '08:32' },
+    ],
+  },
+  {
+    date: '26.08.22',
+    exercises: [
+      { id: '3', group: 'Costas', name: 'Puxada frontal', time: '11:24' },
+    ],
+  },
+];
 
-  function handleAcessar() {
-    console.log({ email, senha });
-  }
+function ExerciseCard({ group, name, time }) {
+  return (
+    <View style={styles.card}>
+      <View>
+        <Text style={styles.cardGroup}>{group}</Text>
+        <Text style={styles.cardName}>{name}</Text>
+      </View>
+      <Text style={styles.cardTime}>{time}</Text>
+    </View>
+  );
+}
 
-  function handleCriarConta() {
-    navigation?.navigate?.('SignUp');
-  }
+function DateSection({ date, exercises }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionDate}>{date}</Text>
+      {exercises.map((exercise) => (
+        <ExerciseCard key={exercise.id} {...exercise} />
+      ))}
+    </View>
+  );
+}
+
+function TabBarIcon({ name, focused, onPress }) {
+  return (
+    <TouchableOpacity style={styles.tabItem} onPress={onPress} hitSlop={12}>
+      <Ionicons
+        name={name}
+        size={24}
+        color={focused ? COLORS.accent : COLORS.placeholder}
+      />
+    </TouchableOpacity>
+  );
+}
+
+export default function HistoryScreen({ navigation }) {
+  const historico = HISTORICO_MOCK;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
 
-      <View style={styles.hero}>
-        <View style={styles.heroOverlay} />
+      <Text style={styles.title}>Histórico de Exercícios</Text>
 
-        <View style={styles.brandRow}>
-          <MaterialCommunityIcons name="dumbbell" size={26} color={COLORS.accent} />
-          <Text style={styles.brandTitle}>Ignite Gym</Text>
+      {historico.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="barbell-outline" size={32} color={COLORS.placeholder} />
+          <Text style={styles.emptyText}>
+            Ainda não há exercícios registrados.{'\n'}Vamos treinar hoje?
+          </Text>
         </View>
-        <Text style={styles.brandSubtitle}>Treine sua mente e o seu corpo</Text>
+      ) : (
+        <FlatList
+          data={historico}
+          keyExtractor={(_, index) => String(index)}
+          renderItem={({ item }) => (
+            <DateSection date={item.date} exercises={item.exercises} />
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      <View style={styles.tabBar}>
+        <TabBarIcon
+          name="home-outline"
+          onPress={() => navigation?.navigate?.('Home')}
+        />
+        <TabBarIcon
+          name="time-outline"
+          focused
+          onPress={() => navigation?.navigate?.('History')}
+        />
+        <TabBarIcon
+          name="person-outline"
+          onPress={() => navigation?.navigate?.('Profile')}
+        />
       </View>
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.formWrapper}
-      >
-        <ScrollView
-          contentContainerStyle={styles.formContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.formTitle}>Acesse sua conta</Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="E-mail"
-            placeholderTextColor={COLORS.placeholder}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={email}
-            onChangeText={setEmail}
-          />
-
-          <View style={styles.passwordField}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Senha"
-              placeholderTextColor={COLORS.placeholder}
-              secureTextEntry={!senhaVisivel}
-              value={senha}
-              onChangeText={setSenha}
-            />
-            <TouchableOpacity
-              onPress={() => setSenhaVisivel((v) => !v)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <MaterialCommunityIcons
-                name={senhaVisivel ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color={COLORS.placeholder}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            activeOpacity={0.85}
-            onPress={handleAcessar}
-          >
-            <Text style={styles.primaryButtonText}>Acessar</Text>
-          </TouchableOpacity>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Ainda não tem acesso?</Text>
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              activeOpacity={0.85}
-              onPress={handleCriarConta}
-            >
-              <Text style={styles.secondaryButtonText}>Criar conta</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -111,10 +113,9 @@ const COLORS = {
   background: '#121214',
   card: '#1E1E20',
   accent: '#00B37E',
-  accentDim: 'rgba(0, 179, 126, 0.12)',
   text: '#F5F5F7',
   placeholder: '#8D8D99',
-  overlay: 'rgba(10, 10, 12, 0.55)',
+  border: '#29292E',
 };
 
 const styles = StyleSheet.create({
@@ -122,109 +123,71 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  hero: {
-    height: '46%',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 28,
-    backgroundColor: '#1A1D1E',
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: COLORS.overlay,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: (RNStatusBar.currentHeight || 0) + 40,
-  },
-  brandTitle: {
+  title: {
     color: COLORS.text,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
-  },
-  brandSubtitle: {
-    color: COLORS.text,
-    fontSize: 13,
-    marginTop: 4,
-    opacity: 0.85,
-  },
-  formWrapper: {
-    flex: 1,
-  },
-  formContent: {
-    paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 32,
-    alignItems: 'center',
-  },
-  formTitle: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-  input: {
-    width: '100%',
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: COLORS.text,
-    fontSize: 14,
-    marginBottom: 14,
-  },
-  passwordField: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    textAlign: 'center',
+    marginTop: 20,
     marginBottom: 24,
   },
-  passwordInput: {
-    flex: 1,
-    color: COLORS.text,
-    fontSize: 14,
-    paddingRight: 12,
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
-  primaryButton: {
-    width: '100%',
-    backgroundColor: COLORS.accent,
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 28,
+  section: {
+    marginBottom: 20,
   },
-  primaryButtonText: {
-    color: '#0A0A0B',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  footer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  footerText: {
+  sectionDate: {
     color: COLORS.placeholder,
     fontSize: 13,
-    marginBottom: 14,
+    marginBottom: 10,
   },
-  secondaryButton: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: COLORS.accent,
-    borderRadius: 8,
-    paddingVertical: 15,
+  card: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginBottom: 10,
   },
-  secondaryButtonText: {
-    color: COLORS.accent,
-    fontSize: 15,
+  cardGroup: {
+    color: COLORS.text,
+    fontSize: 14,
     fontWeight: '700',
+    marginBottom: 4,
+  },
+  cardName: {
+    color: COLORS.placeholder,
+    fontSize: 13,
+  },
+  cardTime: {
+    color: COLORS.placeholder,
+    fontSize: 13,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    gap: 12,
+  },
+  emptyText: {
+    color: COLORS.placeholder,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  tabBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingVertical: 14,
+  },
+  tabItem: {
+    padding: 8,
   },
 });
